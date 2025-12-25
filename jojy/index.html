@@ -1,0 +1,482 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>إلى أميرتي 2026</title>
+    <style>
+        :root {
+            --primary-color: #ff4d6d;
+            --bg-dark: #1a1a1a;
+        }
+
+        body, html {
+            margin: 0;
+            padding: 0;
+            height: 100%;
+            width: 100%;
+            overflow: hidden;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-dark);
+            color: white;
+            touch-action: pan-y;
+        }
+
+        /* تأثير القلوب */
+        #hearts-container {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .heart {
+            position: absolute;
+            color: var(--primary-color);
+            animation: fall linear infinite;
+        }
+
+        @keyframes fall {
+            to { transform: translateY(110vh) rotate(360deg); }
+        }
+
+        /* حاوية السحب (Slider) */
+        .slider-wrapper {
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .slider {
+            height: 100%;
+            display: flex;
+            transition: transform 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+            z-index: 1;
+            direction: ltr; /* هذا مهم لعمل السحب بشكل صحيح */
+        }
+
+        .slide {
+            min-width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            position: relative;
+            padding: 20px 0;
+            box-sizing: border-box;
+        }
+
+        .content {
+            z-index: 2;
+            padding: 20px;
+            width: 90%;
+            max-width: 500px;
+            direction: rtl; /* المحتوى يبقى RTL */
+        }
+
+        .img-frame {
+            width: 250px;
+            height: 350px;
+            border: 5px solid white;
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            margin: 0 auto 20px;
+        }
+
+        .img-frame img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        /* العد التنازلي - موجود في كل الشرائح */
+        .countdown {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        .time-box {
+            background: rgba(255, 77, 109, 0.8);
+            padding: 10px;
+            border-radius: 10px;
+            min-width: 55px;
+            font-size: 0.5rem;
+        }
+
+        .time-box span {
+            display: block;
+            font-size: 1rem;
+            font-weight: bold;
+            margin-bottom: 2px;
+        }
+
+        /* زر الهدية */
+        #gift-btn {
+            display: none;
+            margin-top: 20px;
+            padding: 15px 30px;
+            background: #ff4d6d;
+            border: none;
+            color: white;
+            border-radius: 50px;
+            font-size: 1.2rem;
+            cursor: pointer;
+            animation: bounce 2s infinite;
+            box-shadow: 0 0 20px var(--primary-color);
+            font-weight: bold;
+        }
+
+        /* الرسالة الفخمة */
+        #surprise-overlay {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.95);
+            z-index: 2000;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            text-align: center;
+        }
+
+        .fancy-card {
+            background: linear-gradient(135deg, #ffffff, #f9f9f9);
+            color: #333;
+            padding: 40px 30px;
+            border-radius: 20px;
+            max-width: 450px;
+            width: 90%;
+            border: 4px solid var(--primary-color);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+        }
+
+        .music-btn {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            z-index: 1000;
+            background: var(--primary-color);
+            border: none;
+            color: white;
+            padding: 12px 20px;
+            border-radius: 30px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        /* مؤشرات التنقل */
+        .slider-indicators {
+            position: fixed;
+            bottom: 70px;
+            left: 0;
+            right: 0;
+            width: 100%;
+            display: flex;
+            justify-content: center;
+            gap: 12px;
+            z-index: 10;
+        }
+
+        .indicator {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.3);
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .indicator.active {
+            background: var(--primary-color);
+            transform: scale(1.3);
+            box-shadow: 0 0 10px var(--primary-color);
+        }
+
+        @keyframes bounce { 
+            0%, 100% { transform: scale(1); } 
+            50% { transform: scale(1.1); } 
+        }
+    </style>
+</head>
+<body>
+
+    <button class="music-btn" onclick="toggleMusic()">🎵 تشغيل الموسيقى</button>
+    <audio id="bgMusic" loop>
+        <source src="music.mp3" type="audio/mpeg">
+    </audio>
+
+    <div id="hearts-container"></div>
+
+    <!-- مؤشرات التنقل -->
+    <div class="slider-indicators" id="indicators">
+        <div class="indicator active" onclick="goToSlide(0)"></div>
+        <div class="indicator" onclick="goToSlide(1)"></div>
+        <div class="indicator" onclick="goToSlide(2)"></div>
+    </div>
+
+    <div class="slider-wrapper">
+        <div class="slider" id="mainSlider">
+            <!-- الشريحة الأولى -->
+            <div class="slide">
+                <div class="content">
+                    <div class="img-frame"><img src="3.jpg" alt="1"></div>
+                    <h1>كل عام وأنتِ بمليون خير</h1>
+                    <p>أجمل صدفة في حياتي..</p>
+                    <div class="countdown" id="timer1"></div>
+                    <button id="gift-btn" onclick="openSurprise()">✨ افتحي هديتك يا حلوة ✨</button>
+                </div>
+            </div>
+
+            <!-- الشريحة الثانية -->
+            <div class="slide">
+                <div class="content">
+                    <div class="img-frame"><img src="2.jpg" alt="2"></div>
+                    <h2>يدكِ هي موطني..</h2>
+                    <p>كل ثانية معكِ هي حياة جديدة ومختلفة</p>
+                    <div class="countdown" id="timer2"></div>
+                </div>
+            </div>
+
+            <!-- الشريحة الثالثة -->
+            <div class="slide">
+                <div class="content">
+                    <div class="img-frame"><img src="1.jpg" alt="3"></div>
+                    <h2>سأبقى أحبك للأبد</h2>
+                    <p>أنتِ لستِ فقط حبيبتي، أنتِ عالمي كله</p>
+                    <div class="countdown" id="timer3"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="surprise-overlay">
+        <div class="fancy-card">
+            <h2 style="color: var(--primary-color);">يا روح قلبي ❤️</h2>
+            <p style="line-height: 1.8; font-size: 1.1rem;">
+                مر شهر و 5 ايام وأنتِ معي، وها نحن نبدأ سنة جديدة.. <br>
+                أريد أن أخبركِ أمام الله وأمام نفسي أنني أحبكِ أكثر من أي شيء. <br>
+                كل عام وأنتِ ضحكتي، كل عام وأنتِ الأكسجين الذي أتنفسه. <br>
+                دمتِ لي حباً لا ينتهي، وعمراً لا يزول.💞❤️
+            </p>
+            <button onclick="closeSurprise()" style="background: var(--primary-color); border:none; color:white; padding:10px 25px; border-radius:10px; font-weight:bold; cursor:pointer;">أحبك ❤️</button>
+        </div>
+    </div>
+
+    <script>
+        // نظام السحب والتحكم
+        const slider = document.getElementById('mainSlider');
+        const indicators = document.querySelectorAll('.indicator');
+        let isDragging = false;
+        let startX = 0;
+        let currentTranslate = 0;
+        let prevTranslate = 0;
+        let currentIndex = 0;
+        const slidesCount = 3;
+        let slideWidth = window.innerWidth;
+
+        // تهيئة الموضع الأولي
+        updateSlider();
+
+        // --- التحكم عن طريق لوحة المفاتيح (الأسهم) ---
+        window.addEventListener('keydown', (e) => {
+            if (e.key === 'ArrowRight') { // السهم لليمين (الصورة التالية)
+                if (currentIndex < slidesCount - 1) {
+                    currentIndex++;
+                    updateSlider();
+                }
+            } else if (e.key === 'ArrowLeft') { // السهم لليسار (الصورة السابقة)
+                if (currentIndex > 0) {
+                    currentIndex--;
+                    updateSlider();
+                }
+            }
+        });
+
+        // أحداث اللمس (للجوال)
+        slider.addEventListener('touchstart', touchStart);
+        slider.addEventListener('touchmove', touchMove);
+        slider.addEventListener('touchend', touchEnd);
+
+        // أحداث الماوس (للكمبيوتر)
+        slider.addEventListener('mousedown', touchStart);
+        slider.addEventListener('mousemove', touchMove);
+        slider.addEventListener('mouseup', touchEnd);
+        slider.addEventListener('mouseleave', touchEnd);
+
+        // منع اختيار النص أثناء السحب
+        slider.addEventListener('selectstart', (e) => e.preventDefault());
+
+        function touchStart(e) {
+            isDragging = true;
+            startX = getPositionX(e);
+            slider.style.transition = 'none';
+            e.preventDefault();
+        }
+
+        function touchMove(e) {
+            if (!isDragging) return;
+            
+            const currentX = getPositionX(e);
+            const diff = currentX - startX;
+            
+            // حساب الترجمة مع الحدود
+            let newTranslate = prevTranslate + diff;
+            
+            // تحديد الحدود (لا يمكن السحب خارج الشرائح)
+            const maxTranslate = 0;
+            const minTranslate = -(slidesCount - 1) * slideWidth;
+            
+            if (newTranslate > maxTranslate) {
+                newTranslate = maxTranslate;
+            } else if (newTranslate < minTranslate) {
+                newTranslate = minTranslate;
+            }
+            
+            currentTranslate = newTranslate;
+            slider.style.transform = `translateX(${currentTranslate}px)`;
+        }
+
+        function touchEnd() {
+            if (!isDragging) return;
+            isDragging = false;
+            
+            // حساب المسافة المقطوعة
+            const movedBy = currentTranslate - prevTranslate;
+            
+            // إذا كانت المسافة المقطوعة كبيرة بما يكفي، انتقل للشريحة التالية/السابقة
+            const threshold = slideWidth * 0.15; // 15% من عرض الشاشة
+            
+            if (Math.abs(movedBy) > threshold) {
+                if (movedBy > 0 && currentIndex > 0) {
+                    // سحب لليمين = اذهب للصورة السابقة
+                    currentIndex--;
+                } else if (movedBy < 0 && currentIndex < slidesCount - 1) {
+                    // سحب لليسار = اذهب للصورة التالية
+                    currentIndex++;
+                }
+            }
+            
+            // تحديث الموضع
+            updateSlider();
+        }
+
+        function getPositionX(e) {
+            return e.type.includes('mouse') ? e.pageX : e.touches[0].clientX;
+        }
+
+        function updateSlider() {
+            // تحديث عرض الشريحة
+            slideWidth = window.innerWidth;
+            
+            // حساب الترجمة الجديدة
+            prevTranslate = -currentIndex * slideWidth;
+            currentTranslate = prevTranslate;
+            
+            // تطبيق التحويل مع انتقال سلس
+            slider.style.transition = 'transform 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94)';
+            slider.style.transform = `translateX(${currentTranslate}px)`;
+            
+            // تحديث المؤشرات
+            updateIndicators();
+        }
+
+        function updateIndicators() {
+            indicators.forEach((indicator, index) => {
+                if (index === currentIndex) {
+                    indicator.classList.add('active');
+                } else {
+                    indicator.classList.remove('active');
+                }
+            });
+        }
+
+        function goToSlide(index) {
+            currentIndex = index;
+            updateSlider();
+        }
+
+        // تحديث عند تغيير حجم النافذة
+        window.addEventListener('resize', () => {
+            slideWidth = window.innerWidth;
+            updateSlider();
+        });
+
+        // تأثير القلوب
+        function createHeart() {
+            const heart = document.createElement('div');
+            heart.classList.add('heart');
+            heart.innerHTML = '❤️';
+            heart.style.left = Math.random() * 100 + 'vw';
+            heart.style.animationDuration = Math.random() * 2 + 3 + 's';
+            heart.style.fontSize = Math.random() * 20 + 10 + 'px';
+            document.getElementById('hearts-container').appendChild(heart);
+            setTimeout(() => heart.remove(), 5000);
+        }
+        setInterval(createHeart, 400);
+
+        // العد التنازلي - تحديث جميع المؤقتات
+        const targetDate = new Date("January 1, 2026 00:00:00").getTime();
+        const countdownTimer = setInterval(function() {
+            const now = new Date().getTime();
+            const diff = targetDate - now;
+
+            const d = Math.floor(diff / (1000 * 60 * 60 * 24));
+            const h = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+            const m = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+            const s = Math.floor((diff % (1000 * 60)) / 1000);
+
+            // تحديث جميع المؤقتات الثلاثة
+            for (let i = 1; i <= 3; i++) {
+                const timerElement = document.getElementById(`timer${i}`);
+                if (timerElement) {
+                    timerElement.innerHTML = `
+                        <div class="time-box"><span>${d}</span><br>يوم</div>
+                        <div class="time-box"><span>${h}</span><br>ساعة</div>
+                        <div class="time-box"><span>${m}</span><br>دقيقة</div>
+                        <div class="time-box"><span>${s}</span><br>ثانية</div>
+                    `;
+                }
+            }
+
+            if (diff <= 0) {
+                clearInterval(countdownTimer);
+                // إخفاء جميع المؤقتات
+                for (let i = 1; i <= 3; i++) {
+                    const timerElement = document.getElementById(`timer${i}`);
+                    if (timerElement) {
+                        timerElement.style.display = "none";
+                    }
+                }
+                document.getElementById("gift-btn").style.display = "inline-block";
+            }
+        }, 1000);
+
+        function openSurprise() {
+            document.getElementById('surprise-overlay').style.display = 'flex';
+        }
+
+        function closeSurprise() {
+            document.getElementById('surprise-overlay').style.display = 'none';
+        }
+
+        function toggleMusic() {
+            const music = document.getElementById('bgMusic');
+            const btn = document.querySelector('.music-btn');
+            if (music.paused) {
+                music.play().catch(e => console.log("الموسيقى لا تعمل:", e));
+                btn.innerText = "⏸️ إيقاف";
+            } else {
+                music.pause();
+                btn.innerText = "🎵 تشغيل";
+            }
+        }
+    </script>
+</body>
+</html>
